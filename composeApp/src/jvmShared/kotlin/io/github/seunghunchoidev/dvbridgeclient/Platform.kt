@@ -29,6 +29,7 @@ interface PlatformInfo {
     val appLabel: String       // 예: "DVBridge Client 0.3 (Android 15)"
     val defaultDevice: String  // 장비명 칸이 비었을 때 (안드로이드: 자동 감지 "Galaxy A17", PC: "PC")
     val isDesktop: Boolean
+    val dataDir: java.io.File  // 주소록 같은 파일을 둘 곳 (안드로이드: 앱 전용 폴더, PC: %APPDATA%\\DVBridgeClient)
 }
 
-const val APP_VERSION = "0.5.1"
+const val APP_VERSION = "0.5.2"

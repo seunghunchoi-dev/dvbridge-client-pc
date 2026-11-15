@@ -2,7 +2,7 @@
 rem DVBridge Client PC installer. Keep this file ASCII. If the folder path has non-ASCII characters, run it through an ASCII junction (mklink /J).
 rem Optional: set MANUAL=C:\path\manual.pdf to include the manual.
 if not defined JAVA_HOME set "JAVA_HOME=C:\AndroidDev\jdk17"
-set "VER=0.5.1"
+set "VER=0.5.2"
 set "B=C:\dev\dmrc-build"
 set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 cd /d "%~dp0"

@@ -12,7 +12,7 @@ DVBridge 서버에 붙어서 BrandMeister 등 DMR 네트워크의 무전을 PC�
 |---|---|
 | 제작자 | **6K2KZR 최승훈** |
 | 라이선스 | [MIT](LICENSE) — 자유롭게 사용·수정·재배포 (저작자 표기 유지) |
-| 내려받기 | [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases) — `DVBridgeClient-0.5.1-setup.exe` |
+| 내려받기 | [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases) — `DVBridgeClient-0.5.2-setup.exe` |
 | 설명서 | [Wiki](https://github.com/seunghunchoi-dev/dvbridge-client-pc/wiki) (사진과 함께 따라 하기) · 설치 폴더와 Releases의 PDF |
 | 같은 앱의 휴대폰판 | [dvbridge-client-android](https://github.com/seunghunchoi-dev/dvbridge-client-android) — 화면·기능 같음 |
 | 서버 | [dvbridge](https://github.com/seunghunchoi-dev/dvbridge) — 이 프로그램이 붙는 Windows 브리지 프로그램 |
@@ -73,6 +73,8 @@ flowchart LR
 - 이름 · 번호 · 개인호출 · **타임슬롯 1/2** · 그룹, **★ 즐겨찾기**, 그룹별 보기, **검색**, **크게/간단히**
 
 ### 📻 채널
+- **DMR 주소록**: 번호를 넣으면 이름 표시(예: TG 450 = South Korea), 콜사인·이름·채널 이름으로 찾기 (BrandMeister 채널 목록·RadioID.net 한국 명단, 공개 자료를 일주일마다 자동으로 받음)
+- 🔊 **9999 내부 에코 시험** 빠른 버튼 (BM으로 안 나감, 서버가 켜 둔 경우)
 - 지금 통화 대상, 번호로 바꾸기(그룹/개인호출), **타임슬롯 1/2**, 🔁 내부 채널
 
 ### ⚙️ 설정
@@ -99,7 +101,7 @@ flowchart LR
 
 ## 설치와 처음 설정
 
-1. [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases)에서 `DVBridgeClient-0.5.1-setup.exe`를 받아 실행합니다 (Windows 10/11 64비트).
+1. [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases)에서 `DVBridgeClient-0.5.2-setup.exe`를 받아 실행합니다 (Windows 10/11 64비트).
    - 관리자 권한이 필요 없고 현재 사용자에게만 설치됩니다. **Java가 함께 들어 있어** 따로 깔 것이 없습니다.
    - 서명이 없는 개인 프로그램이라 "Windows의 PC 보호"가 나오면 **추가 정보 → 실행**.
 2. **설정 → 서버**에 DVBridge 운영자에게 받은 **주소**와 **포트**를 넣고 **연결** (같은 PC면 `127.0.0.1`).

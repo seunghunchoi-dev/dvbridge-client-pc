@@ -18,6 +18,7 @@ object DesktopPlatform : PlatformInfo {
     override val appLabel = "DVBridge Client $APP_VERSION (Windows)"
     override val defaultDevice = "PC"
     override val isDesktop = true
+    override val dataDir: File = File(System.getenv("APPDATA") ?: System.getProperty("user.home"), "DVBridgeClient").apply { mkdirs() }
 }
 
 /**

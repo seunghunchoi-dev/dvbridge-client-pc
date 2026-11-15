@@ -33,6 +33,7 @@ class UsrpClient(private val l: Listener) {
         val notice: Boolean = false,                                          // 브릿지 공지 (name = 공지 제목)
         val source: String = "", val resume: Boolean = false,                 // 공지 종류 tts/live/schedule, 이어서
         val intercom: Boolean = false,                                        // 내부 채널 (BM으로 안 나감, name = 말한 사용자 이름)
+        val echo: Boolean = false,                                            // 서버 내부 에코 시험 응답 (BM 안 거침)
     )
 
     interface Listener {
@@ -43,6 +44,7 @@ class UsrpClient(private val l: Listener) {
         fun onCallDetail(c: CallInfo)
         fun onInfo(tg: Int, priv: Boolean, ts: Int)
         fun onIntercomTg(tg: Int)
+        fun onEchoTg(tg: Int)
         fun onMessage(text: String)
         fun onLog(text: String)
     }
@@ -232,7 +234,7 @@ class UsrpClient(private val l: Listener) {
                 val o = Json.parseToJsonElement(t.substring(10)).jsonObject
                 l.onCallDetail(CallInfo(o.int("src"), 0, o.int("dst"), o.int("slot"), o.bool("priv"),
                     o.str("call"), o.str("name"), o.str("loc"), o.str("alias"), o.bool("notice"),
-                    o.str("source"), o.bool("resume"), o.bool("intercom")))
+                    o.str("source"), o.bool("resume"), o.bool("intercom"), o.bool("echo")))
             } catch (_: Exception) {}
             t.startsWith("INFO:MSG:") -> l.onMessage(t.substring(9))
             t.startsWith("INFO:{") -> try {
@@ -242,6 +244,7 @@ class UsrpClient(private val l: Listener) {
                 val priv = tune.endsWith("#")
                 if (priv) tune = tune.dropLast(1)
                 l.onIntercomTg(o.int("intercom_tg"))    // 서버는 꺼져 있으면 키를 안 넣음 → 0 = 숨김
+                l.onEchoTg(o.int("echo_tg"))            // 서버 내부 에코 번호 (없으면 0 = 숨김)
                 val tg = tune.toIntOrNull() ?: 0
                 if (tg > 0) l.onInfo(tg, priv, ts)
             } catch (_: Exception) {}

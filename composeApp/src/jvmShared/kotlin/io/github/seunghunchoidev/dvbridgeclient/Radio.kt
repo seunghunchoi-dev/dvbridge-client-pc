@@ -24,6 +24,8 @@ data class RadioState(
     val message: String = "",
     val micLevel: Float = 0f,
     val intercomTg: Int = 0,                        // 서버 설정 내부 채널 번호 (INFO로 받음, 0 = 없음·꺼짐)
+    val echoTg: Int = 0,                            // 서버 내부 에코 번호 (예: 9999, BM 없이 내 목소리 되돌려 줌, 0 = 없음)
+    val pending: String = "",                       // 바꾸는 중인 채널 (예: "TG 450") — 서버가 INFO로 확인하면 지움
     val log: List<String> = emptyList(),
 )
 
@@ -39,6 +41,8 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
     private val _state = MutableStateFlow(RadioState())
     val state: StateFlow<RadioState> = _state
     private val client = UsrpClient(this)
+    /** DMR 주소록 (채널 이름·한국 사람 명단, 일주일마다 자동으로 받음) */
+    val dir = Directory(store, platform.dataDir)
     private val timeFmt = SimpleDateFormat("HH:mm:ss", Locale.KOREA)
     private val timer = Timer("radio-tot", true)
 
@@ -79,7 +83,7 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
         setPtt(false)
         client.disconnect()
         audio.stopPlayback()
-        _state.update { it.copy(conn = UsrpClient.State.OFF, rx = false, tx = false, tg = 0, ts = 0, intercomTg = 0) }  // 끊으면 지난 대상 지움
+        _state.update { it.copy(conn = UsrpClient.State.OFF, rx = false, tx = false, tg = 0, ts = 0, intercomTg = 0, echoTg = 0) }  // 끊으면 지난 대상 지움
         onChanged?.invoke()
     }
 
@@ -105,10 +109,22 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
         return null
     }
 
+    private var lastDtmf = ""
+    private var lastDtmfAt = 0L
+
     fun changeTarget(dtmf: String): String? {
         if (client.state != UsrpClient.State.ONLINE) return "서버에 연결된 뒤에 바꿀 수 있습니다"
         if (_state.value.tx) return "말하는 중에는 바꿀 수 없습니다"
+        val now = nowMs()
+        // 같은 채널을 짧은 시간에 여러 번 누르면 한 번만 보냄 (서버 확인을 기다리는 중)
+        if (dtmf == lastDtmf && now - lastDtmfAt < 4000) return null
+        lastDtmf = dtmf; lastDtmfAt = now
+        val num = dtmf.trimEnd('#')
+        val label = if (dtmf.endsWith("#")) "개인 $num" else "TG $num"
+        _state.update { it.copy(pending = label) }
         client.sendTarget(dtmf)
+        // 서버 확인(INFO)이 6초 안에 안 오면 "바꾸는 중" 표시를 거둠
+        timer.schedule(timerTask { _state.update { if (it.pending == label) it.copy(pending = "") else it } }, 6000)
         return null
     }
 
@@ -162,8 +178,8 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
 
     // 상대방 정보: 기본(SET_INFO) → 자세한 정보(이름·지역·이름표·공지·내부 채널) 순서로 채워짐. 새 통화 시작마다 지움
     override fun onCallInfo(c: UsrpClient.CallInfo) {
-        val who = c.call.ifEmpty { c.src.toString() }
-        val line = "${timeFmt.format(Date())}  $who → ${if (c.priv) "" else "TG "}${c.dst}"
+        val who = PeerLabel.who(c)
+        val line = "${timeFmt.format(Date())}  $who → ${PeerLabel.target(c)}"
         _state.update { it.copy(peer = c, recent = (listOf(line) + it.recent).take(30)) }
         log("수신: $who (${c.src}) → ${if (c.priv) "" else "TG "}${c.dst}, 슬롯 ${c.slot}")
     }
@@ -175,12 +191,13 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
                 call = c.call.ifEmpty { old.call }, name = c.name.ifEmpty { old.name },
                 loc = c.loc.ifEmpty { old.loc }, alias = c.alias.ifEmpty { old.alias },
                 notice = old.notice || c.notice, source = c.source.ifEmpty { old.source },
-                resume = old.resume || c.resume, intercom = old.intercom || c.intercom)
+                resume = old.resume || c.resume, intercom = old.intercom || c.intercom, echo = old.echo || c.echo)
             var recent = it.recent
             if (recent.isNotEmpty()) {
                 if (c.alias.isNotEmpty() && old.alias != c.alias) recent = listOf(recent[0] + "  「${c.alias}」") + recent.drop(1)
                 if (c.intercom && !old.intercom) recent = listOf(recent[0] + "  🔁 내부 채널") + recent.drop(1)
-                if (c.notice && !old.notice)
+                if (c.echo && !old.echo) recent = listOf("${timeFmt.format(Date())}  🔊 에코 시험 (BM 안 거침)") + recent.drop(1)
+                else if (c.notice && !old.notice)
                     recent = listOf("${timeFmt.format(Date())}  📢 브릿지 공지${if (c.resume) " (이어서)" else ""}  ${c.name}") + recent.drop(1)
             }
             it.copy(peer = merged, recent = recent)
@@ -189,11 +206,13 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
     }
 
     override fun onInfo(tg: Int, priv: Boolean, ts: Int) {
-        _state.update { it.copy(tg = tg, priv = priv, ts = ts) }
+        _state.update { it.copy(tg = tg, priv = priv, ts = ts, pending = "") }
+        lastDtmf = ""   // 서버가 확인함 → 같은 번호를 다시 눌러도 보냄
         onChanged?.invoke()
     }
 
     override fun onIntercomTg(tg: Int) { _state.update { it.copy(intercomTg = tg) } }
+    override fun onEchoTg(tg: Int) { _state.update { it.copy(echoTg = tg) } }
 
     override fun onMessage(text: String) {
         _state.update { it.copy(message = "서버 알림: $text") }
@@ -201,6 +220,27 @@ class Radio(private val store: KeyValueStore, private val platform: PlatformInfo
     }
 
     override fun onLog(text: String) = log(text)
+}
+
+/**
+ * "마지막으로 들은 사람" 표시: BM이 자동으로 보내는 응답(4000 연결 해제 안내, 에코 9990·xxx997)은
+ * 숫자 그대로 보이면 채널 번호처럼 헷갈리므로 이름으로 바꿔 보여 줌. 사람은 콜사인 그대로.
+ */
+object PeerLabel {
+    /** BM 서비스면 이름, 아니면 null */
+    fun service(c: UsrpClient.CallInfo): String? {
+        if (c.call.isNotEmpty() && !c.call.all { it.isDigit() }) return null      // 콜사인이 있으면 사람
+        return when {
+            c.src == 4000 -> "BM 안내 (연결 해제됨)"
+            c.src == 9990 -> "에코 시험 응답"
+            c.src in 100997..999997 && c.src % 1000 == 997 -> "에코 시험 응답 (${c.src})"
+            c.src in 1..999_999 -> "BM 서비스 ${c.src}"                         // 사람 DMR ID는 7자리
+            else -> null
+        }
+    }
+    fun who(c: UsrpClient.CallInfo) = service(c) ?: c.call.ifEmpty { c.src.toString() }
+    /** 어디로 온 통화인지: 개인호출이면 "나에게(개인호출)", 그룹이면 "TG 450" */
+    fun target(c: UsrpClient.CallInfo) = if (c.priv) "나에게 (개인호출)" else "TG ${c.dst}"
 }
 
 /** 서버와 같은 규칙의 미리 보기 (실제 값은 서버가 만듦: Session::make_location / make_talker_alias) */
