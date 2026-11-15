@@ -26,6 +26,8 @@ VersionInfoCopyright=Copyright (c) 2026 6K2KZR 최승훈, MIT License
 DefaultDirName={autopf}\DVBridge Client
 DefaultGroupName=DVBridge 클라이언트
 DisableProgramGroupPage=yes
+; 0.4의 시작 메뉴 폴더 이름(DMRBridge 클라이언트)을 이어 쓰지 않고 새 이름으로
+UsePreviousGroup=no
 UsePreviousAppDir=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -52,11 +54,11 @@ Name: "desktopicon"; Description: "바탕 화면에 바로 가기 만들기"; Gr
 ; 이전 버전의 라이브러리 파일(이름에 해시가 붙음)이 쌓이지 않게 app 폴더를 비우고 새로 넣음
 Type: filesandordirs; Name: "{app}\app"
 Type: filesandordirs; Name: "{app}\runtime"
-; 0.4까지의 옛 이름(DVBridge 클라이언트) 실행 파일·바로 가기 정리
-Type: files; Name: "{app}\DVBridgeClient.exe"
-Type: files; Name: "{app}\DVBridge 클라이언트 설명서.pdf"
-Type: filesandordirs; Name: "{autoprograms}\DVBridge 클라이언트"
-Type: files; Name: "{autodesktop}\DVBridge 클라이언트.lnk"
+; 0.4까지의 옛 이름(DMRBridge 클라이언트) 실행 파일·바로 가기 정리
+Type: files; Name: "{app}\DMRBridgeClient.exe"
+Type: files; Name: "{app}\DMRBridge 클라이언트 설명서.pdf"
+Type: filesandordirs; Name: "{autoprograms}\DMRBridge 클라이언트"
+Type: files; Name: "{autodesktop}\DMRBridge 클라이언트.lnk"
 
 [Files]
 Source: "{#Stage}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
