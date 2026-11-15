@@ -22,12 +22,12 @@ object DesktopPlatform : PlatformInfo {
 
 /**
  * 설정 파일: %APPDATA%\DVBridgeClient\universal.properties
- * 처음이면 옛 이름(DVBridge 클라이언트, %APPDATA%\DVBridgeClient)의 설정을 옮겨 오고, 그것도 없으면 Qt판 client.ini에서 가져옴
+ * 처음이면 옛 이름(DMRBridge 클라이언트, %APPDATA%\DMRBridgeClient)의 설정을 옮겨 오고, 그것도 없으면 Qt판 client.ini에서 가져옴
  */
 class DesktopStore : KeyValueStore {
     private val base = File(System.getenv("APPDATA") ?: System.getProperty("user.home"))
     private val dir = File(base, "DVBridgeClient")
-    private val oldDir = File(base, "DVBridgeClient")      // 0.4까지의 이름
+    private val oldDir = File(base, "DMRBridgeClient")      // 0.4까지의 이름
     private val file = File(dir, "universal.properties")
     private val p = Properties()
 

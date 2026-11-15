@@ -2,7 +2,7 @@
 
 **[DVBridge](https://github.com/seunghunchoi-dev/dvbridge) 전용 Windows 프로그램**입니다.
 DVBridge 서버에 붙어서 BrandMeister 등 DMR 네트워크의 무전을 PC로 듣고, 스페이스바나 큰 버튼을 눌러 말할 수 있습니다.
-넓은 화면에 맞게 **무전기처럼** 지금 채널·상대방·채널 버튼·말하기를 한 화면에 보여 줍니다.
+휴대폰판과 **같은 메뉴 4개**(말하기·슬롯·채널·설정)를 PC 화면에 맞게 왼쪽 세로 줄로 놓고, 맨 아래에 가로로 긴 말하기 버튼을 둡니다.
 
 > 0.4까지는 **DMRBridge 클라이언트**라는 이름이었습니다. DMR 말고 다른 디지털 방식도 담을 수 있게 0.5부터 **DVBridge**로 바꿨습니다(서버도 함께).
 
@@ -12,7 +12,7 @@ DVBridge 서버에 붙어서 BrandMeister 등 DMR 네트워크의 무전을 PC�
 |---|---|
 | 제작자 | **6K2KZR 최승훈** |
 | 라이선스 | [MIT](LICENSE) — 자유롭게 사용·수정·재배포 (저작자 표기 유지) |
-| 내려받기 | [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases) — `DVBridgeClient-0.5-setup.exe` |
+| 내려받기 | [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases) — `DVBridgeClient-0.5.1-setup.exe` |
 | 설명서 | [Wiki](https://github.com/seunghunchoi-dev/dvbridge-client-pc/wiki) (사진과 함께 따라 하기) · 설치 폴더와 Releases의 PDF |
 | 같은 앱의 휴대폰판 | [dvbridge-client-android](https://github.com/seunghunchoi-dev/dvbridge-client-android) — 화면·기능 같음 |
 | 서버 | [dvbridge](https://github.com/seunghunchoi-dev/dvbridge) — 이 프로그램이 붙는 Windows 브리지 프로그램 |
@@ -51,16 +51,14 @@ flowchart LR
 
 ## 화면과 기능
 
-창이 넓으면 **무전기형**, 좁히면 휴대폰처럼 아래 탭 4개로 바뀝니다.
+메뉴는 휴대폰판과 **똑같이 4개**입니다. 창이 넓으면 메뉴가 왼쪽 세로 줄에, 좁히면 휴대폰처럼 아래에 놓입니다.
 
 | 자리 | 내용 |
 |---|---|
-| 맨 위 | 연결 상태 · **지금 채널을 크게**(이름 · 번호 · 타임슬롯) · **⚙ 설정** |
-| 왼쪽 | 지금 말하는 사람 / 마지막으로 들은 사람(콜사인 크게, 이름·지역·이름표), 최근 수신 목록 |
-| 오른쪽 | **채널 버튼** — 누르면 바로 그 채널로, 지금 채널은 파랑 "✓ 지금". **＋ 번호로**, **✎ 고치기**, **＋ 추가** |
-| 맨 아래 | 양쪽에 걸친 **가로로 긴 말하기 버튼** (스페이스바도 됨) |
-
-설정·번호 화면은 오른쪽 칸에 열리고 **← 채널 버튼으로**로 돌아옵니다.
+| 맨 위 | 연결 상태 · **지금 채널을 크게**(이름 · 번호 · 타임슬롯) |
+| 왼쪽 | 메뉴 4개 — 🎙 말하기 · 🗂 슬롯 · 📻 채널 · ⚙ 설정 (휴대폰과 같은 순서·같은 그림) |
+| 가운데 | 고른 메뉴의 화면 |
+| 맨 아래 | **가로로 긴 말하기 버튼** — 어느 메뉴에서나 바로 누를 수 있음 (스페이스바도 됨) |
 
 ### 🎙️ 말하기
 - **스페이스바**를 누르고 있는 동안 송신 (글자 입력 칸에 커서가 있을 때는 제외), 또는 큰 버튼
@@ -70,13 +68,14 @@ flowchart LR
 - 송신은 한 번에 **180초**가 넘으면 자동으로 멈춤
 
 ### 🗂️ 슬롯 (채널 메모리)
-- 자주 쓰는 TG·개인호출을 **개수 제한 없이** 저장, 누르면 바로 그 채널로 (넓은 화면에서는 채널 버튼 타일, 칸 너비에 맞춰 2~5개씩)
+- 자주 쓰는 TG·개인호출을 **개수 제한 없이** 저장, 누르면 바로 그 채널로 (넓은 화면에서는 채널 버튼 타일로, 칸 너비에 맞춰 2~5개씩)
+- **＋ 번호로** 타일 → 채널 메뉴, **✎ 고치기**를 켜고 타일을 누르면 그 채널 고치기
 - 이름 · 번호 · 개인호출 · **타임슬롯 1/2** · 그룹, **★ 즐겨찾기**, 그룹별 보기, **검색**, **크게/간단히**
 
 ### 📻 채널
 - 지금 통화 대상, 번호로 바꾸기(그룹/개인호출), **타임슬롯 1/2**, 🔁 내부 채널
 
-### ⚙️ 설정 (맨 위 ⚙ 버튼)
+### ⚙️ 설정
 
 <img src="docs/images/pc_settings.png" width="600" alt="PC 설정">
 
@@ -100,7 +99,7 @@ flowchart LR
 
 ## 설치와 처음 설정
 
-1. [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases)에서 `DVBridgeClient-0.5-setup.exe`를 받아 실행합니다 (Windows 10/11 64비트).
+1. [Releases](https://github.com/seunghunchoi-dev/dvbridge-client-pc/releases)에서 `DVBridgeClient-0.5.1-setup.exe`를 받아 실행합니다 (Windows 10/11 64비트).
    - 관리자 권한이 필요 없고 현재 사용자에게만 설치됩니다. **Java가 함께 들어 있어** 따로 깔 것이 없습니다.
    - 서명이 없는 개인 프로그램이라 "Windows의 PC 보호"가 나오면 **추가 정보 → 실행**.
 2. **설정 → 서버**에 DVBridge 운영자에게 받은 **주소**와 **포트**를 넣고 **연결** (같은 PC면 `127.0.0.1`).

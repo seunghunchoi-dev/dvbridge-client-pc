@@ -52,7 +52,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             packageName = "DVBridgeClient"
-            packageVersion = "0.5.0"
+            packageVersion = "0.5.1"
             description = "DVBridge Client"
             copyright = "Copyright (c) 2026 Choi Seunghun (6K2KZR), MIT License"
             vendor = "DVBridge"

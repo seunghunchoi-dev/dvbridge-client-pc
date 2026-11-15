@@ -3,7 +3,7 @@
 ; 업데이트: AppId가 같아 새 설치 파일을 실행하면 덮어씀. 설정(%APPDATA%\DVBridgeClient)은 건드리지 않음.
 ; 개인정보 없음: 설정 파일은 설치하지 않으며 호출부호·서버 주소는 처음 실행 때 사용자가 입력.
 #ifndef AppVer
-  #define AppVer "0.5"
+  #define AppVer "0.5.1"
 #endif
 #ifndef Stage
   #define Stage "C:\dev\dmrc-build\compose\binaries\main\app\DVBridgeClient"
@@ -19,7 +19,7 @@ AppVersion={#AppVer}
 AppVerName=DVBridge 클라이언트 {#AppVer}
 AppPublisher=6K2KZR 최승훈
 AppCopyright=Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR), MIT License
-VersionInfoVersion={#AppVer}.0.0
+VersionInfoVersion={#AppVer}.0
 VersionInfoCompany=6K2KZR 최승훈
 VersionInfoDescription=DVBridge 클라이언트 설치
 VersionInfoCopyright=Copyright (c) 2026 6K2KZR 최승훈, MIT License
