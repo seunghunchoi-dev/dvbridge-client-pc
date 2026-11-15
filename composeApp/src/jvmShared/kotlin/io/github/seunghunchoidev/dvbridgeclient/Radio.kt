@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -210,8 +210,8 @@ object NamePreview {
     /** BM 기기 위치 칸(20자) */
     fun location(device: String): String {
         val d = ascii(device)
-        var t = if (d.isEmpty()) "DMRBridge" else "DMRBridge $d"
-        if (t.length > 20 && d.startsWith("Galaxy ", ignoreCase = true)) t = "DMRBridge " + d.substring(7)
+        var t = if (d.isEmpty()) "DVBridge" else "DVBridge $d"
+        if (t.length > 20 && d.startsWith("Galaxy ", ignoreCase = true)) t = "DVBridge " + d.substring(7)
         return t.take(20)
     }
 
@@ -220,8 +220,8 @@ object NamePreview {
         val c = ascii(call.uppercase())
         val d = ascii(device)
         val head = if (c.isEmpty()) "" else "$c "
-        var t = head + "DMRBridge" + if (d.isEmpty()) "" else " $d"
-        if (t.length > 31 && d.startsWith("Galaxy ", ignoreCase = true)) t = head + "DMRBridge " + d.substring(7)
+        var t = head + "DVBridge" + if (d.isEmpty()) "" else " $d"
+        if (t.length > 31 && d.startsWith("Galaxy ", ignoreCase = true)) t = head + "DVBridge " + d.substring(7)
         return t.take(31)
     }
 }

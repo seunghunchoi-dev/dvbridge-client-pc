@@ -11,5 +11,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "DMRBridgeClientPC"
+rootProject.name = "DVBridgeClientPC"
 include(":composeApp")

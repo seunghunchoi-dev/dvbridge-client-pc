@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,10 +32,10 @@ import kotlin.system.exitProcess
 /** PC판 시작점: 공통 화면(App) + 스페이스바 말하기 + 소리 장치 설정 + 한 번에 하나만 실행 */
 fun main(args: Array<String>) {
     // 한 번에 하나만 (같은 마이크를 두 프로그램이 잡지 않게)
-    val lockFile = File(System.getProperty("java.io.tmpdir"), "DMRBridgeClientUniversal.lock")
+    val lockFile = File(System.getProperty("java.io.tmpdir"), "DVBridgeClientUniversal.lock")
     val lock = try { RandomAccessFile(lockFile, "rw").channel.tryLock() } catch (_: Exception) { null }
     if (lock == null) {
-        JOptionPane.showMessageDialog(null, "이미 실행 중입니다.", "DMRBridge 클라이언트", JOptionPane.INFORMATION_MESSAGE)
+        JOptionPane.showMessageDialog(null, "이미 실행 중입니다.", "DVBridge 클라이언트", JOptionPane.INFORMATION_MESSAGE)
         exitProcess(0)
     }
 
@@ -72,7 +72,7 @@ fun main(args: Array<String>) {
         var spaceDown by remember { mutableStateOf(false) }
         Window(
             onCloseRequest = { radio.disconnect(); exitApplication() },
-            title = "DMRBridge 클라이언트",
+            title = "DVBridge 클라이언트",
             icon = painterResource("app.png"),
             // PC 화면: 넓게 (왼쪽 말하기 | 오른쪽 탭). 좁히면 휴대폰처럼 한 칸 배치로 바뀜
             state = rememberWindowState(width = 1200.dp, height = 800.dp, position = WindowPosition.Aligned(Alignment.Center)),

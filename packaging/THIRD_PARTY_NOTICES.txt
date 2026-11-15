@@ -1,12 +1,12 @@
-THIRD-PARTY NOTICES — DMRBridge Client (PC)
+THIRD-PARTY NOTICES — DVBridge Client (PC)
 ============================================
 
-DMRBridge Client itself is MIT licensed (see LICENSE.txt).
+DVBridge Client itself is MIT licensed (see LICENSE.txt).
 Author: 6K2KZR 최승훈 (Choi Seunghun).
 
 This package also contains the following third-party components, which keep
 their own licenses. No voice codec (vocoder) is included: voice conversion is
-done by the DMRBridge server.
+done by the DVBridge server.
 
 
 1. Java runtime — Eclipse Temurin (OpenJDK) 17.0.21  (runtime\ folder)

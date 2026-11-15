@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 import com.sun.jna.Function
 import com.sun.jna.Memory
@@ -15,23 +15,33 @@ import java.io.File
 import java.util.Properties
 
 object DesktopPlatform : PlatformInfo {
-    override val appLabel = "DMRBridge Client $APP_VERSION (Windows)"
+    override val appLabel = "DVBridge Client $APP_VERSION (Windows)"
     override val defaultDevice = "PC"
     override val isDesktop = true
 }
 
-/** 설정 파일: %APPDATA%\DMRBridgeClient\universal.properties (처음이면 Qt판 client.ini에서 서버·내 정보를 가져옴) */
+/**
+ * 설정 파일: %APPDATA%\DVBridgeClient\universal.properties
+ * 처음이면 옛 이름(DVBridge 클라이언트, %APPDATA%\DVBridgeClient)의 설정을 옮겨 오고, 그것도 없으면 Qt판 client.ini에서 가져옴
+ */
 class DesktopStore : KeyValueStore {
-    private val dir = File(System.getenv("APPDATA") ?: System.getProperty("user.home"), "DMRBridgeClient")
+    private val base = File(System.getenv("APPDATA") ?: System.getProperty("user.home"))
+    private val dir = File(base, "DVBridgeClient")
+    private val oldDir = File(base, "DVBridgeClient")      // 0.4까지의 이름
     private val file = File(dir, "universal.properties")
     private val p = Properties()
 
     init {
-        if (file.exists()) file.inputStream().use { p.load(it) } else importQt()
+        val old = File(oldDir, "universal.properties")
+        when {
+            file.exists() -> file.inputStream().use { p.load(it) }
+            old.exists() -> { old.inputStream().use { p.load(it) }; save() }
+            else -> importQt()
+        }
     }
 
     private fun importQt() {
-        val ini = File(dir, "client.ini")
+        val ini = File(oldDir, "client.ini")   // Qt판은 옛 이름 폴더에 저장했음
         if (!ini.exists()) return
         var section = ""
         val map = mapOf("server/host" to "host", "server/port" to "port", "me/callsign" to "callsign", "me/dmr_id" to "dmr_id",
@@ -49,7 +59,7 @@ class DesktopStore : KeyValueStore {
 
     @Synchronized private fun save() {
         dir.mkdirs()
-        file.outputStream().use { p.store(it, "DMRBridge Client (universal)") }
+        file.outputStream().use { p.store(it, "DVBridge Client (universal)") }
     }
 
     override fun getString(key: String, def: String): String = p.getProperty(key) ?: def

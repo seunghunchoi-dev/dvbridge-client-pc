@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 /** 설정 저장소 (안드로이드: SharedPreferences "settings" — 기존 앱 설정 그대로 / PC: 속성 파일) */
 interface KeyValueStore {
@@ -26,9 +26,9 @@ interface AudioBackend {
 
 /** 기기별 정보 */
 interface PlatformInfo {
-    val appLabel: String       // 예: "DMRBridge Client 0.3 (Android 15)"
+    val appLabel: String       // 예: "DVBridge Client 0.3 (Android 15)"
     val defaultDevice: String  // 장비명 칸이 비었을 때 (안드로이드: 자동 감지 "Galaxy A17", PC: "PC")
     val isDesktop: Boolean
 }
 
-const val APP_VERSION = "0.4"
+const val APP_VERSION = "0.5"

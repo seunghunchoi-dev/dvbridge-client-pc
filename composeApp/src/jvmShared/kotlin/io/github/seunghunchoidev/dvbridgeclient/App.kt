@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -78,7 +78,8 @@ fun Modifier.typing(m: UiModel) = onFocusChanged { m.typing = it.isFocused }
 class UiModel(private val store: KeyValueStore, val radio: Radio, val hooks: UiHooks) {
     var tab by mutableIntStateOf(if (store.getString("host", "").isBlank()) 3 else 0)   // 0 말하기 1 슬롯 2 채널 3 설정
     var typing by mutableStateOf(false)      // 글자 입력 칸에 커서가 있음 → 스페이스바를 말하기로 쓰지 않음
-    var wide by mutableStateOf(false)        // 넓은 화면 배치 (PC): 말하기는 항상 왼쪽에 보임
+    var wide by mutableStateOf(false)        // 넓은 화면 배치 (PC·태블릿·폴더블): 무전기형
+    var panel by mutableIntStateOf(if (store.getString("host", "").isBlank()) 2 else 0)   // 넓은 화면 오른쪽: 0 채널 버튼 1 번호로 2 설정
     val slots = mutableStateListOf<ChannelSlot>().apply { addAll(loadSlots()) }
     var slotFilter by mutableStateOf("")     // 슬롯 걸러 보기: "" 전체, "★" 즐겨찾기, 그룹 이름
     var slotCompact by mutableStateOf(store.getBoolean("slot_compact", false))   // 간단히 보기 (한 줄)
@@ -124,6 +125,10 @@ private fun targetText(s: RadioState) = when {
     else -> "${if (s.priv) "개인" else "TG"} ${s.tg}"
 }
 
+/** 지금 통화 대상과 같은 슬롯의 이름 (없으면 "") — 위쪽에 "한국 · TG 450"처럼 이름을 함께 보여 줌 */
+private fun slotName(m: UiModel, s: RadioState) =
+    m.slots.firstOrNull { it.tg == s.tg && it.priv == s.priv }?.name?.trim().orEmpty()
+
 /** 화면 전체: 위쪽 상태 + 탭 3개 (말하기·채널·설정) */
 @Composable
 fun App(m: UiModel, platform: PlatformInfo) {
@@ -151,12 +156,13 @@ private fun Screen(m: UiModel, p: Palette, platform: PlatformInfo) {
     LaunchedEffect(m.toast) { if (m.toast.isNotEmpty()) { delay(4000); m.toast = "" } }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val wide = maxWidth >= 860.dp
+        // 넓은 배치(왼쪽 말하기 | 오른쪽 탭): PC 창, 태블릿, 폴더블 펼친 화면(Galaxy Z Fold 안쪽 ≈ 860dp)
+        val wide = maxWidth >= 700.dp
         SideEffect { m.wide = wide }
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = p.bg,
-            topBar = { StatusBar(s, p) },
+            topBar = { StatusBar(m, s, p) },
             bottomBar = {
                 if (!wide) NavigationBar(containerColor = p.card, tonalElevation = 0.dp) {
                     TABS.forEachIndexed { i, (ic, label) ->
@@ -171,25 +177,34 @@ private fun Screen(m: UiModel, p: Palette, platform: PlatformInfo) {
             },
         ) { pad ->
             if (wide) {
-                // PC 넓은 화면: 왼쪽 말하기(항상) | 오른쪽 탭(슬롯·채널·설정)
-                val right = if (m.tab == 0) 1 else m.tab
-                Row(Modifier.padding(pad).fillMaxSize()) {
-                    Box(Modifier.weight(0.42f).fillMaxHeight()) { TalkTab(m, s, now, p) }
+                // 넓은 화면 = 무전기형: 위(상태 줄) 지금 채널 크게 + ⚙ / 왼쪽 상대방·최근 수신 / 오른쪽 채널 버튼 / 아래 가로로 긴 말하기
+                Column(Modifier.padding(pad).fillMaxSize()) {
+                Row(Modifier.weight(1f).fillMaxWidth()) {
+                    Box(Modifier.weight(0.40f).fillMaxHeight()) { TalkTab(m, s, now, p, withPtt = false) }
                     Box(Modifier.width(1.dp).fillMaxHeight().background(p.line))
-                    Column(Modifier.weight(0.58f).fillMaxHeight()) {
-                        Row(Modifier.fillMaxWidth().background(p.card).padding(horizontal = 10.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TABS.drop(1).forEachIndexed { k, (ic, label) ->
-                                val i = k + 1
-                                val cur = right == i
-                                Box(Modifier.weight(1f).heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp))
-                                    .background(if (cur) Blue else p.bg).clickable { m.tab = i }, contentAlignment = Alignment.Center) {
-                                    Text("$ic  $label", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = if (cur) Color.White else p.text)
-                                }
+                    Column(Modifier.weight(0.60f).fillMaxHeight()) {
+                        if (m.panel != 0) {
+                            // 번호로 / 설정: 위에 '돌아가기'
+                            Row(Modifier.fillMaxWidth().background(p.card).clickable { m.panel = 0 }.padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Text("←  채널 버튼으로", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Blue)
+                                Spacer(Modifier.weight(1f))
+                                Text(if (m.panel == 1) "📻 번호로 바꾸기" else "⚙ 설정", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = p.text)
                             }
                         }
-                        Box(Modifier.fillMaxSize()) { TabContent(m, s, now, p, platform, right) }
+                        Box(Modifier.fillMaxSize()) {
+                            when (m.panel) {
+                                1 -> ChannelTab(m, s, p)
+                                2 -> SettingsTab(m, s, p, platform)
+                                else -> SlotTab(m, s, p, tiles = true)
+                            }
+                        }
                     }
+                }
+                Box(Modifier.fillMaxWidth().background(p.line).height(1.dp))
+                Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
+                    PttButton(m, s, p, Modifier.fillMaxWidth().height(130.dp), inline = true)
+                }
                 }
             } else {
                 Box(Modifier.padding(pad).fillMaxSize()) { TabContent(m, s, now, p, platform, m.tab) }
@@ -231,19 +246,36 @@ private fun TabContent(m: UiModel, s: RadioState, now: Long, p: Palette, platfor
 
 // ---------------- 위쪽 상태 (모든 탭): 연결 상태 + 통화 대상을 크게 ----------------
 @Composable
-private fun StatusBar(s: RadioState, p: Palette) {
+private fun StatusBar(m: UiModel, s: RadioState, p: Palette) {
     val (ct, cc) = when (s.conn) {
         UsrpClient.State.OFF -> "연결 안 됨" to Gray
         UsrpClient.State.RESOLVING, UsrpClient.State.WAITING -> "연결하는 중…" to Amber
         UsrpClient.State.ONLINE -> "연결됨" to Green
         UsrpClient.State.NO_REPLY -> "서버 응답 없음" to Red
     }
+    val name = if (s.tg > 0) slotName(m, s) else ""
     Column(Modifier.fillMaxWidth().background(p.card).windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(16.dp).clip(CircleShape).background(cc))
             Spacer(Modifier.width(10.dp))
-            Text(ct, color = p.text, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-            if (s.tg > 0) Text(targetText(s), color = p.text, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+            Text(ct, color = p.text, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Spacer(Modifier.weight(1f))
+            if (m.wide) {
+                // 무전기형: 지금 채널을 가운데 크게 (이름 · 번호 · 타임슬롯)
+                if (s.tg > 0) Text(listOf(name, targetText(s), if (s.ts > 0) "타임슬롯 ${s.ts}" else "").filter { it.isNotEmpty() }.joinToString("  ·  "),
+                    color = p.text, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.weight(1f))
+                val on = m.panel == 2
+                Box(Modifier.heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp)).background(if (on) Blue else p.bg)
+                    .clickable { m.panel = if (on) 0 else 2 }.padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
+                    Text("⚙ 설정", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = if (on) Color.White else p.text)
+                }
+            } else if (s.tg > 0) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(targetText(s), color = p.text, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                    if (name.isNotEmpty()) Text(name, color = p.sub, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
         }
         if (s.message.isNotEmpty()) Text(s.message, color = Amber, fontSize = 17.sp, fontWeight = FontWeight.Bold)
     }
@@ -251,14 +283,14 @@ private fun StatusBar(s: RadioState, p: Palette) {
 
 // ---------------- 말하기 ----------------
 @Composable
-private fun TalkTab(m: UiModel, s: RadioState, now: Long, p: Palette) {
+private fun TalkTab(m: UiModel, s: RadioState, now: Long, p: Palette, withPtt: Boolean = true) {
     val online = s.conn == UsrpClient.State.ONLINE
     Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val (bt, bg, fg) = when {
             s.tx -> Triple("🔴 말하는 중  ${(now - s.txSince) / 1000}초", Red, Color.White)
             s.rx -> Triple("🔊 듣는 중  ${(now - s.rxSince) / 1000}초", Green, Color.White)
             online -> Triple("조용함 · 기다리는 중", p.card, p.text)
-            else -> Triple("연결 안 됨 → 설정 탭에서 연결", p.card, p.text)
+            else -> Triple(if (m.wide) "연결 안 됨 → ⚙ 설정에서 연결" else "연결 안 됨 → 설정 탭에서 연결", p.card, p.text)
         }
         Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(bg).padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
             Text(bt, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = fg)
@@ -291,16 +323,28 @@ private fun TalkTab(m: UiModel, s: RadioState, now: Long, p: Palette) {
         if (s.recent.size > 1) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
                 Text("최근", fontSize = 16.sp, color = p.sub, fontWeight = FontWeight.Bold)
-                s.recent.drop(if (s.rx) 1 else 0).take(3).forEach {
+                s.recent.drop(if (s.rx) 1 else 0).take(if (withPtt) 3 else 10).forEach {   // 넓은 화면은 왼쪽 칸을 최근 목록으로 채움
                     Text(it, fontSize = 17.sp, color = p.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        if (withPtt) {
+            // 휴대폰 배치: 말하기 버튼이 남는 세로 공간을 채움 (최소 190dp)
+            Spacer(Modifier.weight(1f))
+            PttButton(m, s, p, Modifier.fillMaxWidth().heightIn(min = 190.dp))
+        }
+    }
+}
+
+/** 말하기 버튼 + 마이크 크기 막대. 휴대폰은 말하기 화면 아래, 넓은 화면은 양쪽 칸 아래에 가로로 길게 */
+@Composable
+private fun PttButton(m: UiModel, s: RadioState, p: Palette, modifier: Modifier, inline: Boolean = false) {
+    val online = s.conn == UsrpClient.State.ONLINE
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val pttColor = if (s.tx) Red else if (online) Blue else Gray
         Box(
-            Modifier.fillMaxWidth().heightIn(min = 190.dp).clip(RoundedCornerShape(28.dp)).background(pttColor)
+            modifier.clip(RoundedCornerShape(28.dp)).background(pttColor)
                 .pointerInput(m.toggleMode) {
                     detectTapGestures(onPress = {
                         m.pttPress()
@@ -310,18 +354,23 @@ private fun TalkTab(m: UiModel, s: RadioState, now: Long, p: Palette) {
                 }.padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if (s.tx) "🔴" else "🎙", fontSize = 40.sp)
-                val hint = m.hooks.pttKeyHint?.let { "\n($it)" } ?: ""
-                Text(
-                    when {
-                        s.tx && m.toggleMode -> "말하는 중\n다시 누르면 끝"
-                        s.tx -> "말하는 중\n손을 떼면 끝"
-                        !online -> "연결 안 됨"
-                        m.toggleMode -> "눌러서 말하기$hint"
-                        else -> "누르고 말하기$hint"
-                    },
-                    style = TextStyle(fontSize = 30.sp, lineHeight = 40.sp), fontWeight = FontWeight.ExtraBold,
+            // inline = 가로로 긴 버튼(넓은 화면): 아이콘과 글자를 한 줄로
+            val br = if (inline) "  " else "\n"
+            val hint = m.hooks.pttKeyHint?.let { "$br($it)" } ?: ""
+            val label = when {
+                s.tx && m.toggleMode -> "말하는 중${br}다시 누르면 끝"
+                s.tx -> "말하는 중${br}손을 떼면 끝"
+                !online -> "연결 안 됨"
+                m.toggleMode -> "눌러서 말하기$hint"
+                else -> "누르고 말하기$hint"
+            }
+            val icon = if (s.tx) "🔴" else "🎙"
+            if (inline) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(icon, fontSize = 44.sp)
+                Text(label, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = Color.White, maxLines = 1)
+            } else Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(icon, fontSize = 40.sp)
+                Text(label, style = TextStyle(fontSize = 30.sp, lineHeight = 40.sp), fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center, color = Color.White)
             }
         }
@@ -387,8 +436,9 @@ private fun ChannelTab(m: UiModel, s: RadioState, p: Palette) {
 
 // ---------------- 슬롯 (채널 메모리, 무한 추가 · 많아져도 보기 쉽게: ★즐겨찾기·그룹·찾기·간단히 보기) ----------------
 @Composable
-private fun SlotTab(m: UiModel, s: RadioState, p: Palette) {
-    var editing by remember { mutableIntStateOf(-1) }      // -1 없음, -2 새 슬롯, 0.. 편집 중인 슬롯(원래 목록 위치)
+private fun SlotTab(m: UiModel, s: RadioState, p: Palette, tiles: Boolean = false) {
+    var editing by remember { mutableIntStateOf(-1) }
+    var editMode by remember { mutableStateOf(false) }      // 무전기형 타일: 고치기 모드 (누르면 고치기 창)      // -1 없음, -2 새 슬롯, 0.. 편집 중인 슬롯(원래 목록 위치)
     var query by remember { mutableStateOf("") }
     val groups = m.slots.map { it.group.trim() }.filter { it.isNotEmpty() }.distinct().sorted()
     val hasFav = m.slots.any { it.fav }
@@ -399,10 +449,21 @@ private fun SlotTab(m: UiModel, s: RadioState, p: Palette) {
         (query.isBlank() || c.name.contains(query.trim(), ignoreCase = true) || c.tg.toString().contains(query.trim()))
     }.sortedByDescending { it.value.fav }     // 즐겨찾기를 위로 (같은 안에서는 원래 순서)
 
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val paneWidth = maxWidth
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Title("채널 슬롯  (${m.slots.size}개)", p)
+            Title(if (tiles) "채널" else "채널 슬롯  (${m.slots.size}개)", p)
             Spacer(Modifier.weight(1f))
+            if (tiles && editing == -1) {
+                // 고치기 모드 켜고 끄기
+                Box(Modifier.heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp)).background(if (editMode) Amber else p.card)
+                    .border(BorderStroke(2.dp, if (editMode) Amber else p.line), RoundedCornerShape(12.dp))
+                    .clickable { editMode = !editMode }.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                    Text(if (editMode) "✓ 고치기 끝" else "✎ 고치기", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = if (editMode) Color.White else p.text)
+                }
+                Spacer(Modifier.width(10.dp))
+            }
             if (editing == -1) Button(onClick = { editing = -2 }, shape = RoundedCornerShape(12.dp), modifier = Modifier.heightIn(min = 52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Blue, contentColor = Color.White)) { Text("＋ 추가", fontSize = 19.sp, fontWeight = FontWeight.Bold) }
         }
@@ -424,8 +485,9 @@ private fun SlotTab(m: UiModel, s: RadioState, p: Palette) {
         // 많아지면 찾기 칸
         if (m.slots.size > 6) OutlinedTextField(query, { query = it.take(20) }, Modifier.fillMaxWidth().typing(m), singleLine = true,
             textStyle = TextStyle(fontSize = 20.sp, color = p.text), label = { Text("🔍 이름 또는 번호로 찾기") })
-        // 보기 방식
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (tiles && editMode && editing == -1) Text("고칠 버튼을 누르세요", fontSize = 18.sp, color = Amber, fontWeight = FontWeight.Bold)
+        // 보기 방식 (무전기형 타일에는 없음)
+        if (!tiles) Row(verticalAlignment = Alignment.CenterVertically) {
             Text("보기", fontSize = 17.sp, color = p.sub)
             Spacer(Modifier.width(10.dp))
             Box(Modifier.weight(1f)) { Choice(listOf("크게" to false, "간단히" to true), m.slotCompact, p) { m.slotCompact = it; m.save("slot_compact", it) } }
@@ -434,7 +496,35 @@ private fun SlotTab(m: UiModel, s: RadioState, p: Palette) {
         if (m.slots.isEmpty() && editing == -1) Text("슬롯이 없습니다. '＋ 추가'를 눌러 만드세요.", fontSize = 19.sp, color = p.text)
         else if (shown.isEmpty()) Text("맞는 슬롯이 없습니다", fontSize = 19.sp, color = p.text)
 
-        val cols = if (m.wide) 2 else 1
+        if (tiles) {
+            // 무전기형: 채널 버튼 타일 (칸 너비에 맞춰 2~5개씩), 끝에 '＋ 번호로'
+            val ed = shown.firstOrNull { it.index == editing }
+            if (ed != null) {
+                val i = ed.index
+                SlotEditor(m, ed.value, p, groups, onDone = { n -> if (n != null) { m.slots[i] = n; m.saveSlots() }; editing = -1 },
+                    onUp = if (i > 0) ({ m.slots.add(i - 1, m.slots.removeAt(i)); m.saveSlots(); editing = i - 1 }) else null,
+                    onDown = if (i < m.slots.size - 1) ({ m.slots.add(i + 1, m.slots.removeAt(i)); m.saveSlots(); editing = i + 1 }) else null,
+                    onDelete = { m.slots.removeAt(i); m.saveSlots(); editing = -1 })
+            }
+            val tcols = (paneWidth.value / 190f).toInt().coerceIn(2, 5)
+            val cells: List<IndexedValue<ChannelSlot>?> = shown + listOf(null)   // null = '＋ 번호로'
+            cells.chunked(tcols).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { cell ->
+                        Box(Modifier.weight(1f)) {
+                            if (cell == null) NumberTile(p) { m.panel = 1 }
+                            else SlotTile(m, s, cell.value, p, editMode) {
+                                if (editMode) editing = cell.index else m.applySlot(cell.value)
+                            }
+                        }
+                    }
+                    repeat(tcols - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            return@Column
+        }
+        // 두 줄은 칸이 충분히 넓을 때만 (좁으면 한 줄 — 번호·타임슬롯이 잘리지 않게)
+        val cols = if (paneWidth >= 640.dp) 2 else 1
         shown.chunked(cols).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { (i, c) ->
@@ -450,6 +540,40 @@ private fun SlotTab(m: UiModel, s: RadioState, p: Palette) {
                 if (row.size < cols) Spacer(Modifier.weight(1f))
             }
         }
+    }
+    }
+}
+
+/** 무전기형 채널 버튼: 이름 크게, 번호·타임슬롯 작게. 지금 채널은 파랑, 즐겨찾기는 ★ */
+@Composable
+private fun SlotTile(m: UiModel, s: RadioState, c: ChannelSlot, p: Palette, editMode: Boolean, onClick: () -> Unit) {
+    val cur = s.tg == c.tg && s.priv == c.priv && (s.ts == 0 || s.ts == c.ts)
+    val fg = if (cur) Color.White else p.text
+    val sub = if (cur) Color.White.copy(alpha = 0.85f) else p.sub
+    Column(Modifier.fillMaxWidth().heightIn(min = 112.dp).clip(RoundedCornerShape(16.dp)).background(if (cur) Blue else p.card)
+        .border(BorderStroke(2.dp, if (editMode) Amber else if (cur) Blue else p.line), RoundedCornerShape(16.dp))
+        .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(c.name.ifBlank { "${c.tg}" }, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, color = fg,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (c.fav) Text("★", fontSize = 20.sp, color = if (cur) Color.White else Color(0xFFF2B300))
+            if (editMode) Text(" ✎", fontSize = 20.sp, color = fg)
+        }
+        Text("${if (c.priv) "개인" else "TG"} ${c.tg}", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = fg, maxLines = 1)
+        Text("타임슬롯 ${c.ts}" + (if (c.group.isNotBlank()) " · ${c.group}" else "") + (if (cur) "  ✓ 지금" else ""),
+            fontSize = 15.sp, color = sub, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** '＋ 번호로' 타일: 번호를 직접 넣어 바꾸는 화면 열기 */
+@Composable
+private fun NumberTile(p: Palette, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 112.dp).clip(RoundedCornerShape(16.dp)).background(p.bg)
+        .border(BorderStroke(2.dp, p.line), RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text("＋", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Blue)
+        Text("번호로", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = p.text)
     }
 }
 
@@ -473,7 +597,7 @@ private fun SlotCard(m: UiModel, s: RadioState, c: ChannelSlot, p: Palette, onFa
                     fontSize = 18.sp, color = sub, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        SmallBtn(if (m.slotCompact || m.wide) "✎" else "✎ 고치기", fg, onClick = onEdit)   // 두 줄 배치(PC)에서는 글자 자리 확보
+        SmallBtn(if (m.slotCompact || m.wide) "✎" else "✎ 고치기", fg, onClick = onEdit)   // 넓은 배치에서는 글자 자리 확보
     }
 }
 
@@ -575,7 +699,7 @@ private fun SettingsTab(m: UiModel, s: RadioState, p: Palette, platform: Platfor
         }
 
         Card(p) {
-            Title("서버 (DMRBridge가 켜진 PC)", p)
+            Title("서버 (DVBridge가 켜진 PC)", p)
             OutlinedTextField(host, { host = it.trim() }, Modifier.fillMaxWidth().typing(m), enabled = off, singleLine = true, textStyle = field,
                 label = { Text("주소") }, placeholder = { Text("예: 192.168.0.10") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
@@ -584,7 +708,7 @@ private fun SettingsTab(m: UiModel, s: RadioState, p: Palette, platform: Platfor
             BigButton(if (off) "연결" else "연결 끊기", color = if (off) Blue else Red) {
                 focus.clearFocus()
                 if (!off) m.hooks.disconnect()
-                else if (host.isBlank()) m.toast = "DMRBridge 프로그램 화면에 나오는 PC 주소를 넣어 주세요"
+                else if (host.isBlank()) m.toast = "DVBridge 프로그램 화면에 나오는 PC 주소를 넣어 주세요"
                 else {
                     val pt = port.toIntOrNull()?.takeIf { it in 1..65535 } ?: 32001
                     m.save("host", host); m.save("port", pt)
@@ -635,7 +759,7 @@ private fun SettingsTab(m: UiModel, s: RadioState, p: Palette, platform: Platfor
 
         TextButton(onClick = { showLog = !showLog }) { Text(if (showLog) "기록 숨기기" else "기록 보기", fontSize = 18.sp) }
         if (showLog) Text(s.log.takeLast(40).joinToString("\n"), fontSize = 13.sp, lineHeight = 17.sp, color = p.text)
-        Text("DMRBridge 클라이언트 $APP_VERSION\n제작자: 6K2KZR 최승훈 · MIT 라이선스\n음성 변환은 DMRBridge 서버가 하므로 이 앱에는 보코더가 없습니다.\n\n사용한 오픈소스 (Apache License 2.0): Kotlin, kotlinx.coroutines, kotlinx.serialization, Compose Multiplatform, AndroidX, Guava listenablefuture\nhttps://www.apache.org/licenses/LICENSE-2.0",
+        Text("DVBridge 클라이언트 $APP_VERSION\n제작자: 6K2KZR 최승훈 · MIT 라이선스\n음성 변환은 DVBridge 서버가 하므로 이 앱에는 보코더가 없습니다.\n\n사용한 오픈소스 (Apache License 2.0): Kotlin, kotlinx.coroutines, kotlinx.serialization, Compose Multiplatform, AndroidX, Guava listenablefuture\nhttps://www.apache.org/licenses/LICENSE-2.0",
             fontSize = 14.sp, color = p.sub)
     }
 }

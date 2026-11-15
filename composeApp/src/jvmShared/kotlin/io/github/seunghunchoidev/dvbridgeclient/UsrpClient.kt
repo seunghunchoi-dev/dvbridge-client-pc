@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
-package io.github.seunghunchoidev.dmrbridgeclient
+package io.github.seunghunchoidev.dvbridgeclient
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -19,7 +19,7 @@ import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 /**
- * DMRBridge 서버(USRP 포트)에 붙는 클라이언트 쪽 프로토콜 (PC·안드로이드 공통, 규격: docs/PROTOCOL.md)
+ * DVBridge 서버(USRP 포트)에 붙는 클라이언트 쪽 프로토콜 (PC·안드로이드 공통, 규격: docs/PROTOCOL.md)
  *  - 패킷: 헤더 32바이트 빅엔디안 "USRP" seq memory keyup talkgroup type mpxid reserved + 음성 160샘플(8kHz, 리틀엔디안)
  *  - type 칸을 빅엔디안으로 보내므로 서버가 INFO(JSON)·MSG 알림도 보내 줌. 반대 순서 패킷은 무시
  *  - 접속: TEXT "REG:DVSWITCH" → "REG:OK", 5초마다 PING, 15초 응답 없으면 NO_REPLY(계속 다시 시도)

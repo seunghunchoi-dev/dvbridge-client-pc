@@ -1,4 +1,4 @@
-// DMRBridge 클라이언트 (PC, Windows) — MIT, Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
+// DVBridge 클라이언트 (PC, Windows) — MIT, Copyright (c) 2026 최승훈 (Choi Seunghun, 6K2KZR)
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -32,7 +32,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
             }
         }
-        // 안드로이드판(dmrbridge-client-android)과 똑같은 공통 코드: 통신·변환·상태·화면
+        // 안드로이드판(dvbridge-client-android)과 똑같은 공통 코드: 통신·변환·상태·화면
         val jvmShared by creating { dependsOn(commonMain) }
         val desktopMain by getting {
             dependsOn(jvmShared)
@@ -48,18 +48,18 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "io.github.seunghunchoidev.dmrbridgeclient.MainKt"
+        mainClass = "io.github.seunghunchoidev.dvbridgeclient.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe)
-            packageName = "DMRBridgeClient"
-            packageVersion = "0.4.0"
-            description = "DMRBridge Client"
+            packageName = "DVBridgeClient"
+            packageVersion = "0.5.0"
+            description = "DVBridge Client"
             copyright = "Copyright (c) 2026 Choi Seunghun (6K2KZR), MIT License"
-            vendor = "DMRBridge"
+            vendor = "DVBridge"
             modules("java.naming", "jdk.unsupported")
             windows {
                 iconFile.set(winIcon)
-                menuGroup = "DMRBridge"
+                menuGroup = "DVBridge"
                 upgradeUuid = "6f3d2b8a-4c1e-4a7b-9d52-0e8a1c3f6b21"
             }
         }

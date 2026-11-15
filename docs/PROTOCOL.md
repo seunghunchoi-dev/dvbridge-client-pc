@@ -1,4 +1,4 @@
-# 클라이언트 ⇄ DMRBridge 통신 (USRP)
+# 클라이언트 ⇄ DVBridge 통신 (USRP)
 
 UDP, 서버 USRP 포트(기본 32001). 클라이언트는 아무 포트에서 보내고 서버는 보낸 곳으로 답합니다.
 
@@ -20,10 +20,10 @@ UDP, 서버 USRP 포트(기본 32001). 클라이언트는 아무 포트에서 �
 - 서버 보호: 음성 패킷 1초 끊기면 PTT 해제, TOT(기본 180초). 클라이언트도 180초에 스스로 멈춤.
 
 ## 장비명과 이름표 (서버가 만듦)
-- BM 기기 위치(RPTC location, 20자): `DMRBridge ` + 장비명 예: `DMRBridge Galaxy A17` (20자 넘으면 "Galaxy " 생략 후 자름). 바뀌면 통화 없을 때 BM 한 번 재접속
+- BM 기기 위치(RPTC location, 20자): `DVBridge ` + 장비명 예: `DVBridge Galaxy A17` (20자 넘으면 "Galaxy " 생략 후 자름). 바뀌면 통화 없을 때 BM 한 번 재접속
   - 재접속 제한: 장비명 때문에 BM 재접속은 사용자마다 10분에 1번까지(처음 1번은 바로). 그 사이 바뀐 이름은 이름표에는 바로, BM 위치는 10분 뒤 최신값으로
   - BM은 RPTC 설명 칸을 쓰지 않고 위치 칸을 기기 정보로 쓰므로 위치 칸에 넣음
-- 이름표(Talker Alias, ETSI TS 102 361-2, 31자): `콜사인 DMRBridge 장비명` 예: `N0CALL DMRBridge Galaxy A17` — 송신 음성에 실려 상대 무전기로 감
+- 이름표(Talker Alias, ETSI TS 102 361-2, 31자): `콜사인 DVBridge 장비명` 예: `N0CALL DVBridge Galaxy A17` — 송신 음성에 실려 상대 무전기로 감
 - 송신 콜사인·DMR ID는 항상 서버 설정 값 (클라이언트 값이 달라도 덮어쓰지 않음)
 
 ## 브릿지 공지 (서버 → 클라이언트)
