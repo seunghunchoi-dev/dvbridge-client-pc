@@ -187,7 +187,7 @@ class UsrpClient(private val l: Listener) {
         val bb = ByteBuffer.wrap(b, 0, n).order(ByteOrder.BIG_ENDIAN)
         val keyup = bb.getInt(12)
         val type = bb.getInt(20)
-        if ((type ushr 16) != 0) return     // 반대 바이트 순서(DVSwitch Mobile용)는 무시
+        if ((type ushr 16) != 0) return     // 반대 바이트 순서(리틀엔디안 클라이언트용)는 무시
         when (type) {
             T_VOICE -> {
                 if (keyup != 0 && n >= 32 + SAMPLES * 2) {
