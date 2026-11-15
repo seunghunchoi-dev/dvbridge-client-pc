@@ -1,0 +1,47 @@
+THIRD-PARTY NOTICES — DMRBridge Client (PC)
+============================================
+
+DMRBridge Client itself is MIT licensed (see LICENSE.txt).
+Author: 6K2KZR 최승훈 (Choi Seunghun).
+
+This package also contains the following third-party components, which keep
+their own licenses. No voice codec (vocoder) is included: voice conversion is
+done by the DMRBridge server.
+
+
+1. Java runtime — Eclipse Temurin (OpenJDK) 17.0.21  (runtime\ folder)
+-----------------------------------------------------------------------
+GNU General Public License version 2 with the Classpath Exception.
+The full license texts and notices of every included module are in
+runtime\legal\ (e.g. runtime\legal\java.base\LICENSE, ASSEMBLY_EXCEPTION).
+The runtime is unmodified (reduced to the modules this program needs with jlink).
+Complete corresponding source code: https://github.com/adoptium/jdk17u
+On request through the channel where you obtained this program, the distributor
+will also provide a copy of this source code for at least three years, for no
+more than the cost of physically performing the distribution.
+
+
+2. Apache License 2.0 components  (app\*.jar)   — LICENSES\Apache-2.0.txt
+-------------------------------------------------------------------------
+- Kotlin standard library — JetBrains s.r.o. and Kotlin contributors
+- kotlinx.coroutines, kotlinx.serialization, kotlinx.datetime, atomicfu — JetBrains s.r.o.
+- Compose Multiplatform (runtime, ui, foundation, material, material3, animation,
+  lifecycle) and Skiko — JetBrains s.r.o. and The Android Open Source Project
+- AndroidX collection / annotation / lifecycle — The Android Open Source Project
+- JetBrains Java Annotations — JetBrains s.r.o.
+- JNA and JNA Platform 5.15.0 — Timothy Wall and JNA contributors
+  (JNA is dual-licensed LGPL 2.1 / Apache 2.0; it is used here under Apache 2.0)
+
+
+3. Skia  (inside skiko-windows-x64.dll)  — LICENSES\BSD-3-Clause-Skia.txt
+-------------------------------------------------------------------------
+Copyright (c) 2011 Google Inc. BSD 3-Clause License.
+
+
+4. ICU data  (app\icudtl.dat)  — LICENSES\Unicode-3.0.txt
+---------------------------------------------------------
+Copyright © 2016-2024 Unicode, Inc. Unicode License V3.
+
+
+Icons: drawn by the author (no third-party images or fonts are bundled;
+the program uses the fonts installed in Windows).
